@@ -55,6 +55,63 @@ def load_retrieval_model():
 # Instantiate model globally
 retrieval_model = load_retrieval_model()
 
+# Global gallery cache
+# Format: { folder_path: { "ids": [...], "embeddings": Tensor of shape (N, 128), "paths": [...] } }
+GALLERY_CACHE = {}
+
+def scan_and_cache_gallery(folder_path_str: str) -> dict:
+    path = Path(folder_path_str)
+    if not path.exists() or not path.is_dir():
+        raise ValueError(f"Directory {folder_path_str} does not exist.")
+    
+    # Check cache
+    if folder_path_str in GALLERY_CACHE:
+        return GALLERY_CACHE[folder_path_str]
+        
+    image_extensions = {".png", ".jpg", ".jpeg"}
+    img_paths = []
+    for root, _, files in os.walk(path):
+        for file in files:
+            if Path(file).suffix.lower() in image_extensions:
+                img_paths.append(Path(root) / file)
+                
+    img_paths.sort()
+    
+    if not img_paths:
+        raise ValueError(f"No valid images found in directory {folder_path_str}")
+        
+    ids = []
+    embeddings_list = []
+    
+    with torch.no_grad():
+        for img_path in img_paths:
+            try:
+                img = Image.open(img_path).convert('RGB')
+                tensor = preprocess_transform(img).unsqueeze(0).to(DEVICE)
+                embedding = retrieval_model(tensor)
+                
+                # Extract ID (e.g. filename without extension)
+                subject_id = img_path.stem
+                
+                ids.append(subject_id)
+                embeddings_list.append(embedding.cpu())
+            except Exception as e:
+                print(f"Skipping corrupt image {img_path}: {e}")
+                
+    if not embeddings_list:
+        raise ValueError(f"Could not encode any images in {folder_path_str}")
+        
+    embeddings = torch.cat(embeddings_list, dim=0)
+    
+    data = {
+        "ids": ids,
+        "embeddings": embeddings,
+        "paths": [str(p) for p in img_paths]
+    }
+    GALLERY_CACHE[folder_path_str] = data
+    print(f"Cached {len(ids)} gallery images from {folder_path_str}")
+    return data
+
 app = FastAPI(title="Sketch2Face Retrieval API")
 
 app.add_middleware(
