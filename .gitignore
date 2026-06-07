@@ -34,6 +34,7 @@ Thumbs.db
 # Local Codex/agent workspace metadata
 .agents/
 .codex/
+docs/
 
 # Generated experiment artifacts and datasets
 outputs/
