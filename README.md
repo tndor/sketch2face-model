@@ -17,6 +17,7 @@ sketch2face/
     02_cufsf_contrastive_resnet18_training.ipynb
     03_standardized_ingestion_ood_experiment.ipynb
     04_multidataset_standardized_training_fei_eval.ipynb
+    05_similarity_gradcam_explanations.ipynb
   progress.md
   requirements.txt
   README.md
@@ -199,7 +200,11 @@ Run the notebooks in order from top to bottom.
 
    Trains on standardized CUFSF plus standardized FS2K, evaluates CUFSF/FS2K test splits, and evaluates FEI if the FEI folders and generated sketches are present.
 
-Notebook 04 can reload the saved multi-dataset checkpoint and rerun evaluation without retraining.
+5. `notebooks/05_similarity_gradcam_explanations.ipynb`
+
+   Reloads the saved multi-dataset checkpoint and builds saliency / Grad-CAM overlays for CUFSF paired retrieval examples and FEI generated-sketch gallery examples.
+
+Notebook 04 can reload the saved multi-dataset checkpoint and rerun evaluation without retraining. Notebook 05 uses that saved checkpoint and does not retrain the model.
 
 ## Generated Outputs
 
@@ -233,6 +238,7 @@ data/outputs/multidataset_standardized_resnet18/multidataset_with_fei_full_galle
 ```
 
 Retrieval visualizations are saved in each experiment's `retrieval_examples/` folder.
+Similarity explanation figures from notebook 05 are saved in `data/outputs/multidataset_standardized_resnet18/explanations/`.
 
 ## Reported Results
 
